@@ -14,6 +14,7 @@ class Actor {
 
     virtual bool ready() = 0;
     virtual void run() = 0;
+    void init() {}
     void execute(bool force = false) {
       if (ready() || force)
         run();

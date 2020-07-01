@@ -10,7 +10,10 @@ void PowerStatus::init() {
 }
 
 bool PowerStatus::ready() {
-  int delta = timestamp() - last_run;
+  battery_current.insert(watch->power->getBattDischargeCurrent());
+  vbus_current.insert(watch->power->getVbusCurrent());
+
+  delta = timestamp() - last_run;
   if (delta >= 0 && delta < 500) {
     return false;
   }
@@ -22,18 +25,20 @@ bool PowerStatus::ready() {
 void PowerStatus::run() {
   char display[255];
 
-
   // if (watch->power->isChargeing()) { // this doesn't work
   snprintf(display, sizeof(display),
       "%i%% %3.1fV %4.1fmA / %3.1fV %4.1fmA",
       watch->power->getBattPercentage(),
       watch->power->getBattVoltage() / 1000,
-      watch->power->getBattDischargeCurrent(),
+      battery_current.average(),
       watch->power->getVbusVoltage() / 1000,
-      watch->power->getVbusCurrent()
+      vbus_current.average()
   );
 
-  screen->fillRect(0, 0, 240, 20, TFT_BLACK);
+  screen->fillRect(0, 0, 240, 40, TFT_BLACK);
   watch->eTFT->drawString(display, 0, 0, 2);
+
+  snprintf(display, sizeof(display), "%i - %lu", delta, millis());
+  watch->eTFT->drawString(display, 0, 20, 2);
 }
 

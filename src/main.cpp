@@ -15,8 +15,10 @@
 // LDO4 -
 // exten - "external module"
 // DCDC2 -
-
-#include <sstream>
+//
+// 40mHz crystal clock
+// valid processor frequencies:
+//  240, 160, 80, 40, 20, 10
 
 #include <TTGO.h>
 #include <WiFi.h>
@@ -24,6 +26,7 @@
 #include "pong.h"
 #include "clock.h"
 #include "power_status.h"
+#include "sleeper_agent.h"
 
 TTGOClass *watch;
 PCF8563_Class *rtc;
@@ -31,9 +34,11 @@ PCF8563_Class *rtc;
 Pong pong;
 Clock watchface;
 PowerStatus power;
+SleeperAgent boss_man;
+
+bool low_power = false;
 
 void ntpRead() {
-  WiFi.begin();
   configTzTime("MST7MDT,M3.2.0/02:00:00,M11.1.0/02:00:00", "pool.ntp.org");
 
   static struct tm timeinfo;
@@ -61,6 +66,7 @@ void ntpRead() {
 void setup(void) {
   Serial.begin(115200);
   randomSeed(analogRead(0)*analogRead(1));
+  Actor::timestamp(millis());
 
   watch = TTGOClass::getWatch();
   watch->begin();
@@ -83,16 +89,37 @@ void setup(void) {
   pong.init();
   watchface.init();
   power.init();
+  boss_man.init();
 
+  // WiFi.enableSTA(true);
+  // WiFi.begin();
   // ntpRead();
+}
+
+int last = 0;
+
+void touchin() {
 }
 
 void loop() {
   Actor::timestamp(millis());
 
   watch->eTFT->startWrite();
-  pong.execute();
+
+  if (millis() - last > 5000) {
+    last = millis();
+  }
+
+
+  if (SleeperAgent::asleep()) {
+  } else {
+    pong.execute();
+  }
+
+  boss_man.execute();
+
   watchface.execute();
   power.execute();
+
   watch->eTFT->endWrite();
 }
