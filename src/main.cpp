@@ -26,7 +26,6 @@
 #include "pong.h"
 #include "clock.h"
 #include "power_status.h"
-#include "sleeper_agent.h"
 
 TTGOClass *watch;
 PCF8563_Class *rtc;
@@ -34,7 +33,6 @@ PCF8563_Class *rtc;
 Pong pong;
 Clock watchface;
 PowerStatus power;
-SleeperAgent boss_man;
 
 bool low_power = false;
 
@@ -89,7 +87,6 @@ void setup(void) {
   pong.init();
   watchface.init();
   power.init();
-  boss_man.init();
 
   // WiFi.enableSTA(true);
   // WiFi.begin();
@@ -106,17 +103,9 @@ void loop() {
 
   watch->eTFT->startWrite();
 
-  if (millis() - last > 5000) {
-    last = millis();
-  }
-
-
-  if (SleeperAgent::asleep()) {
-  } else {
+  if (! PowerStatus::asleep()) {
     pong.execute();
   }
-
-  boss_man.execute();
 
   watchface.execute();
   power.execute();
