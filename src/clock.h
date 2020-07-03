@@ -11,4 +11,5 @@ class Clock : public Actor {
     int last_second = 61;
     int16_t x_middle, y_middle;
     int16_t x_position, y_position;
+    int16_t font_height;
 };

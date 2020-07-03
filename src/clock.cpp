@@ -11,7 +11,8 @@ void Clock::init() {
   x_middle = screen->width() / 2;
   y_middle = screen->height() / 2;
 
-  y_position = y_middle - screen->fontHeight() / 2;
+  font_height = screen->fontHeight();
+  y_position = y_middle - (font_height / 2);
 }
 
 bool Clock::ready() {
@@ -31,7 +32,14 @@ void Clock::run() {
 
   snprintf(output, sizeof(output), "%02u%02u", time.hour, time.minute);
 
-  x_position = x_middle - screen->textWidth(output) / 2;
+  int16_t text_width = screen->textWidth(output);
+  int16_t x_position = x_middle - (text_width / 2);
+
+  screen->fillRect(
+      x_position, y_position,
+      text_width, font_height,
+      TFT_BLACK
+  );
 
   screen->drawString(output, x_position, y_position);
 }
