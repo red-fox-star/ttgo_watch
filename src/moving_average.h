@@ -1,6 +1,6 @@
 #include <stdexcept>
 
-template <typename datatype, int buffer_size, int window_size>
+template <typename datatype, int buffer_size>
 class MovingAverage {
   public:
     datatype data[buffer_size] = {0};
@@ -14,7 +14,7 @@ class MovingAverage {
       data[position] = value;
     };
 
-    datatype average() {
+    datatype average(int window_size = buffer_size) {
       datatype sum = 0;
 
       for (int i = window_size - 1; i >= 0; i --)
@@ -23,8 +23,31 @@ class MovingAverage {
       return sum / (datatype) window_size;
     }
 
+    datatype min(int window_size = buffer_size) {
+      datatype _min = fetch(position);
+
+      for (int i = window_size - 1; i >= 0; i --) {
+        datatype val = fetch(position - i);
+        if (val < _min) _min = val;
+      }
+
+      return _min;
+    }
+
+    datatype max(int window_size = buffer_size) {
+      datatype _max = fetch(position);
+
+      for (int i = window_size - 1; i >= 0; i --) {
+        datatype val = fetch(position - i);
+        if (val > _max) _max = val;
+      }
+
+      return _max;
+    }
+
   private:
     int position = -1;
+
     datatype fetch(int pos) {
       int actual_pos = pos;
 

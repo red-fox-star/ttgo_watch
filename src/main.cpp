@@ -61,9 +61,14 @@ void ntpRead() {
   );
 }
 
+
 void setup(void) {
+  // setCpuFrequencyMhz(80);
+
   Serial.begin(115200);
+
   randomSeed(analogRead(0)*analogRead(1));
+
   Actor::timestamp(millis());
 
   watch = TTGOClass::getWatch();
@@ -75,10 +80,12 @@ void setup(void) {
 
   watch->bl->adjust(150);
 
-  watch->power->setPowerOutPut(AXP202_EXTEN, AXP202_OFF);
-  watch->power->setPowerOutPut(AXP202_DCDC2, AXP202_OFF);
-  watch->power->setPowerOutPut(AXP202_LDO3, AXP202_OFF);
-  watch->power->setPowerOutPut(AXP202_LDO4, AXP202_OFF);
+  watch->power->setPowerOutPut(
+      AXP202_EXTEN
+      | AXP202_DCDC2
+      | AXP202_LDO3
+      | AXP202_LDO4
+  , AXP202_OFF);
 
   watch->eTFT->setTextColor(WHITE, BLACK);
   watch->eTFT->setTextFont(8);
@@ -87,6 +94,13 @@ void setup(void) {
   pong.init();
   watchface.init();
   power.init();
+
+  pinMode(AXP202_INT, INPUT);
+  attachInterrupt(AXP202_INT, [] {
+      power.interrupt();
+  }, FALLING);
+
+  WiFi.mode(WIFI_OFF);
 
   // WiFi.enableSTA(true);
   // WiFi.begin();
@@ -105,9 +119,9 @@ void loop() {
 
   if (! PowerStatus::asleep()) {
     pong.execute();
+    watchface.execute();
   }
 
-  watchface.execute();
   power.execute();
 
   watch->eTFT->endWrite();
