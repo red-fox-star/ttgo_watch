@@ -1,3 +1,4 @@
+#pragma once
 #include <stdexcept>
 
 template <typename datatype, int buffer_size>

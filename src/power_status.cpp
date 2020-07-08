@@ -11,12 +11,13 @@ void PowerStatus::pluggedIn(bool state) { _plugged_in = state; }
 void PowerStatus::charging(bool state) { _charging = state; }
 
 void PowerStatus::powerDown() {
+  return;
   // setCpuFrequencyMhz(40);
   watch->closeBL();
   watch->displaySleep();
 
   low_power = true;
-  sleep_time = timestamp();
+  sleep_time = millis();
 }
 
 void PowerStatus::powerUp() {
@@ -25,13 +26,13 @@ void PowerStatus::powerUp() {
   watch->displayWakeup();
   watch->openBL();
 
-  wake_time = timestamp();
+  wake_time = millis();
   low_power = false;
 }
 
 bool PowerStatus::checkTouch() {
   if (watch->touch->touched() > 0) {
-    last_touch = timestamp();
+    last_touch = millis();
     return true;
   }
 
@@ -88,36 +89,21 @@ void PowerStatus::touchWake() {
       powerUp();
     }
   } else {
-    if (timestamp() - wake_time > 11000) {
+    if (millis() - wake_time > 11000) {
       powerDown();
     }
   }
 }
 
 void PowerStatus::logPower() {
-  if (timestamp() - last_logged < 100) return;
-  last_logged = timestamp();
+  if (millis() - last_logged < 100) return;
+  last_logged = millis();
   battery_current.insert(watch->power->getBattDischargeCurrent());
   vbus_current.insert(watch->power->getVbusCurrent());
 }
 
-bool PowerStatus::ready() {
-  if (_read_irq) readIRQ();
-  touchWake();
-  logPower();
-  if (low_power) return false;
-
-  unsigned long int delta = timestamp() - last_run;
-  if (delta >= 0 && delta < 500) {
-    return false;
-  }
-
-  last_run = timestamp();
-  return true;
-}
-
-void PowerStatus::pluggedInSummary(char * buffer, int len) {
-  snprintf(buffer, len,
+void PowerStatus::pluggedInSummary() {
+  snprintf(display_buffer, sizeof(display_buffer),
       "%i%%%s %4.1fmA %4.1fmA",
       watch->power->getBattPercentage(),
       charging() ? "+" : "",
@@ -126,8 +112,8 @@ void PowerStatus::pluggedInSummary(char * buffer, int len) {
   );
 }
 
-void PowerStatus::batterySummary(char * buffer, int len) {
-  snprintf(buffer, len,
+void PowerStatus::batterySummary() {
+  snprintf(display_buffer, sizeof(display_buffer),
       "%i%% %4.1fmA",
       watch->power->getBattPercentage(),
       battery_current.average()
@@ -135,12 +121,24 @@ void PowerStatus::batterySummary(char * buffer, int len) {
 }
 
 void PowerStatus::run() {
-  char display[255];
+  if (_read_irq) readIRQ();
 
-  if (pluggedIn()) pluggedInSummary(display, sizeof(display));
-  else batterySummary(display, sizeof(display));
+  touchWake();
+  logPower();
+
+  if (low_power)
+    delay_time = 1000;
+  else
+    delay_time = 500;
+  refresh_display = true;
+}
+
+void PowerStatus::display() {
+  Serial.printf("powerstatus display (%i)\n", displayIdentifier());
+  if (pluggedIn()) pluggedInSummary();
+  else batterySummary();
 
   screen->fillRect(0, 0, 240, 20, TFT_BLACK);
-  watch->eTFT->drawString(display, 0, 0, 2);
+  watch->eTFT->drawString(display_buffer, 0, 0, 2);
 }
 

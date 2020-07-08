@@ -1,3 +1,9 @@
+/*
+ * Pong
+ * Original Code from https://github.com/rparrett/pongclock
+ *
+ */
+
 #include "pong.h"
 
 Pong::Pong() {
@@ -62,29 +68,25 @@ void Pong::init() {
   screen->setTextColor(WHITE);
 }
 
-
-bool Pong::ready() {
-  int delta = timestamp() - last_run;
-  if (delta >= 0 && delta < dly) {
-    return false;
-  }
-
-  last_run = timestamp();
-  return true;
+void Pong::run() {
+  delay_time = 10;
+  refresh_display = true;
 }
 
-void Pong::run() {
+void Pong::display() {
+  Serial.printf("pong display (%i)\n", displayIdentifier());
   lpaddle();
   rpaddle();
   midline();
   ball();
+  Serial.printf("pong done displaying (%i)\n", displayIdentifier());
 }
 
 
 int16_t h = 240;
 int16_t w = 240;
 
-int dly = 10;
+unsigned short int dly = 10;
 
 int16_t paddle_h = 25;
 int16_t paddle_w = 2;
@@ -128,8 +130,6 @@ void Pong::midline() {
     // If the ball is not on the line then don't redraw the line
     if ((ball_x < dashline_x - ball_w) && (ball_x > dashline_x + dashline_w)) return;
 
-    screen->startWrite();
-
     // Quick way to draw a dashed line
     screen->setAddrWindow(dashline_x, 0, dashline_w, h);
 
@@ -137,8 +137,6 @@ void Pong::midline() {
         screen->pushColor(WHITE, dashline_w * dashline_h); // push dash pixels
         screen->pushColor(BLACK, dashline_w * dashline_h); // push gap pixels
     }
-
-    screen->endWrite();
 }
 
 

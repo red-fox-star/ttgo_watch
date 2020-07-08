@@ -3,19 +3,26 @@
  * Original Code from https://github.com/rparrett/pongclock
  *
  */
+#pragma once
 
 #define BLACK TFT_BLACK
 #define WHITE TFT_WHITE
 #define GREY  TFT_LIGHTGREY
 
 #include "actor.h"
+#include "displayable.h"
 
-class Pong : public Actor {
+class Pong : public Actor, public Displayable {
   public:
     Pong();
     bool ready();
     void run();
     void init();
+    void display();
+
+    const uint32_t displayIdentifier() {
+      return 0x2;
+    }
 
   private:
     int last_run = 0;

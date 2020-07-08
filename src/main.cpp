@@ -1,31 +1,14 @@
-/*
- * Pong
- * Original Code from https://github.com/rparrett/pongclock
- *
- */
-
 #define LILYGO_TWATCH_2020_V1
-#define BLACK TFT_BLACK
-#define WHITE TFT_WHITE
-#define GREY  TFT_LIGHTGREY
-
-// axp202 pins
-// LDO2 - backlight
-// LDO3 -
-// LDO4 -
-// exten - "external module"
-// DCDC2 -
-//
-// 40mHz crystal clock
-// valid processor frequencies:
-//  240, 160, 80, 40, 20, 10
 
 #include <TTGO.h>
 #include <WiFi.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #include "pong.h"
 #include "clock.h"
 #include "power_status.h"
+#include "display.h"
 
 TTGOClass *watch;
 PCF8563_Class *rtc;
@@ -33,6 +16,10 @@ PCF8563_Class *rtc;
 Pong pong;
 Clock watchface;
 PowerStatus power;
+Display display;
+TaskHandle_t display_task;
+
+static portMUX_TYPE display_mutex;
 
 bool low_power = false;
 
@@ -61,15 +48,80 @@ void ntpRead() {
   );
 }
 
+void buildTask(const char * name, Actor * object, int priority = 2) {
+  xTaskCreate(
+      [](void* object){
+        for (;;) {
+          bool update_display = true;
+          unsigned int delay_time = 100;
+
+          Actor* actor = static_cast<Actor*>(object);
+          Displayable* displayable = static_cast<Displayable*>(object);
+
+          actor->execute(delay_time, update_display);
+
+          if (update_display) {
+            auto yolo = xTaskNotify(
+                display_task,
+                displayable->displayIdentifier(),
+                eSetValueWithoutOverwrite
+            );
+
+            if (yolo != pdPASS) {
+              Serial.printf("couldn't notify for display of  %#x\n", displayable->displayIdentifier());
+            }
+          }
+
+          Serial.printf("delaying %#x by %i\n", displayable->displayIdentifier(), delay_time);
+          vTaskDelay(delay_time / portTICK_PERIOD_MS);
+        }
+        Serial.println("deleting a task");
+        vTaskDelete(NULL);
+      },
+      name, 10000, (void *) object, priority, NULL
+  );
+}
+
+void setupDisplayTask() {
+  display.power = (PowerStatus*) &power;
+  display.watchface = (Clock*) &watchface;
+  display.pong = (Pong*) &pong;
+
+  vPortCPUInitializeMutex(&display_mutex);
+
+  xTaskCreate(
+    [](void* object) {
+      Display* display = static_cast<Display*>(object);
+      uint32_t notification_value;
+      BaseType_t received;
+
+      for (;;) {
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+        received = xTaskNotifyWait(0xffffffff, 0xffffffff, &notification_value, 10000);
+
+        if (received != pdTRUE) continue;
+
+        portENTER_CRITICAL(&display_mutex);
+        display->notified_by(notification_value);
+        display->run();
+        portEXIT_CRITICAL(&display_mutex);
+      }
+
+      Serial.println("deleting the display task!");
+      vTaskDelete(NULL);
+    },
+    "display", 10000, (void *) &display, 30, &display_task
+ );
+}
 
 void setup(void) {
   // setCpuFrequencyMhz(80);
+  // disableCore1WDT();
+  // disableCore0WDT();
 
   Serial.begin(115200);
 
   randomSeed(analogRead(0)*analogRead(1));
-
-  Actor::timestamp(millis());
 
   watch = TTGOClass::getWatch();
   watch->begin();
@@ -91,16 +143,22 @@ void setup(void) {
   watch->eTFT->setTextFont(8);
   watch->openBL();
 
-  pong.init();
-  watchface.init();
-  power.init();
-
   pinMode(AXP202_INT, INPUT);
   attachInterrupt(AXP202_INT, [] {
       power.interrupt();
   }, FALLING);
 
   WiFi.mode(WIFI_OFF);
+
+  setupDisplayTask();
+
+  pong.init();
+  watchface.init();
+  power.init();
+
+  buildTask("pong", &pong, 10);
+  buildTask("watchface", &watchface, 9);
+  buildTask("power", &power, 11);
 
   // WiFi.enableSTA(true);
   // WiFi.begin();
@@ -113,16 +171,5 @@ void touchin() {
 }
 
 void loop() {
-  Actor::timestamp(millis());
-
-  watch->eTFT->startWrite();
-
-  if (! PowerStatus::asleep()) {
-    pong.execute();
-    watchface.execute();
-  }
-
-  power.execute();
-
-  watch->eTFT->endWrite();
+  vTaskDelay(10000);
 }

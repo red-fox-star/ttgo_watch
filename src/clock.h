@@ -1,10 +1,17 @@
+#pragma once
 #include "actor.h"
+#include "displayable.h"
 
-class Clock : public Actor {
+class Clock : public Actor, public Displayable {
   public:
     bool ready();
     void run();
     void init();
+    void display();
+
+    const uint32_t displayIdentifier() {
+      return 0x4;
+    }
 
   private:
     RTC_Date time;

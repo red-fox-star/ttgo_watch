@@ -5,23 +5,24 @@
 
 class Actor {
   public:
-    static void timestamp(int t) { _timestamp = t; }
-    static int timestamp() { return _timestamp; }
     static void setWatch(TTGOClass * _watch) {
       watch = _watch;
       screen = watch->eTFT;
     }
 
-    virtual bool ready() = 0;
     virtual void run() = 0;
-    void init() {}
-    void execute(bool force = false) {
-      if (ready() || force)
-        run();
+    void execute(unsigned int & sleep_time, bool & display_update) {
+      refresh_display = false;
+
+      run();
+
+      sleep_time = delay_time;
+      display_update = refresh_display;
     }
 
   protected:
-    static int _timestamp;
     static TTGOClass *watch;
     static TFT_eSPI *screen;
+    unsigned int delay_time = 100;
+    bool refresh_display = false;
 };

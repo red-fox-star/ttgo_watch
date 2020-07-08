@@ -1,7 +1,10 @@
+#pragma once
 #include "actor.h"
+#include "displayable.h"
+
 #include "moving_average.h"
 
-class PowerStatus : public Actor {
+class PowerStatus : public Actor, public Displayable {
   public:
     bool ready();
     void run();
@@ -13,6 +16,11 @@ class PowerStatus : public Actor {
 
     void powerDown();
     void powerUp();
+
+    void display();
+    const uint32_t displayIdentifier() {
+      return 0x1;
+    }
 
     static bool asleep();
 
@@ -26,10 +34,11 @@ class PowerStatus : public Actor {
     MovingAverage<float, 100> battery_current;
     MovingAverage<float, 100> vbus_current;
     long unsigned int last_logged = 0;
+    char display_buffer[255];
 
     void logPower();
-    void pluggedInSummary(char * buffer, int len);
-    void batterySummary(char * buffer, int len);
+    void pluggedInSummary();
+    void batterySummary();
 
     // managing the low_power/high_power state
     long unsigned int last_touch = 0;
