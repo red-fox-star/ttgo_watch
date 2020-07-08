@@ -24,28 +24,23 @@ static portMUX_TYPE display_mutex;
 bool low_power = false;
 
 void ntpRead() {
-  configTzTime("MST7MDT,M3.2.0/02:00:00,M11.1.0/02:00:00", "pool.ntp.org");
+  configTzTime("MST7MDT,M3.2.0/02:00:00,M11.1.0/02:00:00", "0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org");
 
   static struct tm timeinfo;
-  getLocalTime(&timeinfo);
+  getLocalTime(&timeinfo, 10000);
+  Serial.println(&timeinfo, "Setting time to: %B %d %Y %H:%M:%S (%A)");
 
-  Serial.printf("New Clock Settings: %04d.%02d.%02d - %02d:%02d:%02d \n",
-      timeinfo.tm_year + 1900,
-      timeinfo.tm_mon + 1,
-      timeinfo.tm_mday,
-      timeinfo.tm_hour,
-      timeinfo.tm_min,
-      timeinfo.tm_sec
-  );
+  watch->rtc->syncToRtc();
+}
 
-  watch->rtc->setDateTime(
-      timeinfo.tm_year + 1900,
-      timeinfo.tm_mon + 1,
-      timeinfo.tm_mday,
-      timeinfo.tm_hour,
-      timeinfo.tm_min,
-      timeinfo.tm_sec
-  );
+void connectWifi() {
+  WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
+      Serial.println("WiFi connected");
+      ntpRead();
+  }, WiFiEvent_t::SYSTEM_EVENT_STA_CONNECTED);
+
+  WiFi.enableSTA(true);
+  WiFi.begin();
 }
 
 void buildTask(const char * name, Actor * object, int priority = 2) {
@@ -55,16 +50,16 @@ void buildTask(const char * name, Actor * object, int priority = 2) {
           bool update_display = true;
           unsigned int delay_time = 100;
 
-          Actor* actor = static_cast<Actor*>(object);
-          Displayable* displayable = static_cast<Displayable*>(object);
+          Actor* actor = (Actor *) object;
+          Displayable* displayable = (Displayable *) object;
 
           actor->execute(delay_time, update_display);
 
           if (update_display) {
             auto yolo = xTaskNotify(
-                display_task,
-                displayable->displayIdentifier(),
-                eSetValueWithoutOverwrite
+              display_task,
+              displayable->displayIdentifier(),
+              eSetValueWithoutOverwrite
             );
 
             if (yolo != pdPASS) {
@@ -72,7 +67,7 @@ void buildTask(const char * name, Actor * object, int priority = 2) {
             }
           }
 
-          Serial.printf("delaying %#x by %i\n", displayable->displayIdentifier(), delay_time);
+          // Serial.printf("delaying %#x by %i\n", displayable->displayIdentifier(), delay_time);
           vTaskDelay(delay_time / portTICK_PERIOD_MS);
         }
         Serial.println("deleting a task");
@@ -91,15 +86,14 @@ void setupDisplayTask() {
 
   xTaskCreate(
     [](void* object) {
-      Display* display = static_cast<Display*>(object);
-      uint32_t notification_value;
+      Display* display = (Display *) object;
       BaseType_t received;
+      uint32_t notification_value;
 
       for (;;) {
-        vTaskDelay(1 / portTICK_PERIOD_MS);
         received = xTaskNotifyWait(0xffffffff, 0xffffffff, &notification_value, 10000);
-
         if (received != pdTRUE) continue;
+        // Serial.printf("notified by %#x\n", notification_value);
 
         portENTER_CRITICAL(&display_mutex);
         display->notified_by(notification_value);
@@ -150,19 +144,20 @@ void setup(void) {
 
   WiFi.mode(WIFI_OFF);
 
-  setupDisplayTask();
-
   pong.init();
   watchface.init();
   power.init();
 
-  buildTask("pong", &pong, 10);
-  buildTask("watchface", &watchface, 9);
-  buildTask("power", &power, 11);
+  delay(10);
+  setupDisplayTask();
 
-  // WiFi.enableSTA(true);
-  // WiFi.begin();
-  // ntpRead();
+  // buildTask("pong", &pong, 10);
+  buildTask("watchface", &watchface, 9);
+  // buildTask("power", &power, 11);
+
+  // connectWifi();
+
+  delay(5000);
 }
 
 int last = 0;

@@ -15,7 +15,7 @@ class Display : public Actor {
     Pong * pong;
 
     void run() {
-      Serial.println("time to display things!");
+      // Serial.println("time to display things!");
       watch->eTFT->startWrite();
 
       if (update_key & power->displayIdentifier())
@@ -28,7 +28,7 @@ class Display : public Actor {
         pong->display();
 
       watch->eTFT->endWrite();
-      Serial.println("finished displaying things");
+      // Serial.println("finished displaying things");
     }
 
     void notified_by(uint32_t notification_value) {
