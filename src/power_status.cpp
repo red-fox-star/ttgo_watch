@@ -11,7 +11,6 @@ void PowerStatus::pluggedIn(bool state) { _plugged_in = state; }
 void PowerStatus::charging(bool state) { _charging = state; }
 
 void PowerStatus::powerDown() {
-  return;
   // setCpuFrequencyMhz(40);
   watch->closeBL();
   watch->displaySleep();
@@ -126,14 +125,17 @@ void PowerStatus::run() {
   touchWake();
   logPower();
 
-  if (low_power)
-    delay_time = 1000;
-  else
-    delay_time = 500;
-  refresh_display = true;
+  // if (low_power)
+  //   delay_time = 1000;
+  // else
+  //   delay_time = 500;
+  delay_time = 250;
+
+  refresh_display = last_run ++ > 8;
 }
 
 void PowerStatus::display() {
+  last_run = 0;
   if (pluggedIn()) pluggedInSummary();
   else batterySummary();
 
