@@ -28,23 +28,17 @@ void Clock::init() {
 
 void Clock::run() {
   time = watch->rtc->getDateTime();
+  delay_time = 250;
   refresh_display = time.second != old_second;
 }
 
 void Clock::display() {
-  // Serial.printf("clock display (%i)\n", displayIdentifier());
-  char output[5];
+  q_message_fmt("clock display (%i:%i:%i) font=%i\n", time.hour, time.minute, time.second, hours_font);
   int16_t position_x;
-  time = watch->rtc->getDateTime();
 
-  // battery percentage
-  snprintf(output, sizeof(output), "%i%%", watch->power->getBattPercentage());
-  screen->setTextPadding( screen->textWidth("100%", 2) );
-  screen->setTextDatum(TL_DATUM);
-  watch->eTFT->drawString(output, 0, 0, 2);
 
   // hour
-  if (old_hour != time.hour) {
+  if (old_hour != time.hour || time.second % 10 == 0) {
     old_hour = time.hour;
     position_x = hours_x;
     screen->setTextPadding(screen->textWidth("0", hours_font));
@@ -53,7 +47,7 @@ void Clock::display() {
   }
 
   // minute
-  if (old_minute != time.minute) {
+  if (old_minute != time.minute || time.second % 10 == 0) {
     old_minute = time.minute;
     position_x = minutes_x;
     screen->setTextPadding(screen->textWidth("0", minutes_font));
@@ -67,6 +61,4 @@ void Clock::display() {
   screen->setTextPadding(screen->textWidth("0", seconds_font));
   if (time.second < 10) position_x += screen->drawChar('0', position_x, seconds_y, seconds_font);
   position_x += screen->drawNumber(time.second, position_x, seconds_y, seconds_font);
-
-  delay_time = 250;
 }
