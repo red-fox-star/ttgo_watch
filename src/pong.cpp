@@ -10,7 +10,7 @@ Pong::Pong() {
   h = 240;
   w = 240;
 
-  dly = 10;
+  dly = 100;
 
   paddle_h = 25;
   paddle_w = 2;
@@ -51,7 +51,7 @@ Pong::Pong() {
 }
 
 void Pong::init() {
-  screen->fillScreen(BLACK);
+  screen->fillScreen(TFT_BLACK);
   lpaddle_y = random(0, h - paddle_h);
   rpaddle_y = random(0, h - paddle_h);
 
@@ -62,26 +62,23 @@ void Pong::init() {
 
   midline();
 
-  screen->fillRect(0, h - 26, w, h - 1, BLACK);
+  screen->fillRect(0, h - 26, w, h - 1, TFT_BLACK);
 
   screen->setTextDatum(TC_DATUM);
-  screen->setTextColor(WHITE);
+  screen->setTextColor(TFT_WHITE);
 }
 
 void Pong::run() {
-  delay_time = 10;
+  delay_time = dly;
   refresh_display = true;
 }
 
 void Pong::display() {
-  Serial.printf("pong display (%i)\n", displayIdentifier());
   lpaddle();
   rpaddle();
   midline();
   ball();
-  Serial.printf("pong done displaying (%i)\n", displayIdentifier());
 }
-
 
 int16_t h = 240;
 int16_t w = 240;
@@ -134,8 +131,8 @@ void Pong::midline() {
     screen->setAddrWindow(dashline_x, 0, dashline_w, h);
 
     for (int16_t i = 0; i < dashline_n; i += 2) {
-        screen->pushColor(WHITE, dashline_w * dashline_h); // push dash pixels
-        screen->pushColor(BLACK, dashline_w * dashline_h); // push gap pixels
+        screen->pushColor(TFT_WHITE, dashline_w * dashline_h); // push dash pixels
+        screen->pushColor(TFT_BLACK, dashline_w * dashline_h); // push gap pixels
     }
 }
 
@@ -172,9 +169,9 @@ int Pong::speed() {
 void Pong::lpaddle() {
 
     if (lpaddle_d == 1) {
-        screen->fillRect(lpaddle_x, lpaddle_y, paddle_w, 1, BLACK);
+        screen->fillRect(lpaddle_x, lpaddle_y, paddle_w, 1, TFT_BLACK);
     } else if (lpaddle_d == -1) {
-        screen->fillRect(lpaddle_x, lpaddle_y + paddle_h - 1, paddle_w, 1, BLACK);
+        screen->fillRect(lpaddle_x, lpaddle_y + paddle_h - 1, paddle_w, 1, TFT_BLACK);
     }
 
     lpaddle_y = lpaddle_y + lpaddle_d;
@@ -189,14 +186,14 @@ void Pong::lpaddle() {
     if (lpaddle_y + paddle_h >= h && lpaddle_d == 1) lpaddle_d = 0;
     else if (lpaddle_y <= 0 && lpaddle_d == -1) lpaddle_d = 0;
 
-    screen->fillRect(lpaddle_x, lpaddle_y, paddle_w, paddle_h, WHITE);
+    screen->fillRect(lpaddle_x, lpaddle_y, paddle_w, paddle_h, TFT_WHITE);
 }
 
 void Pong::rpaddle() {
     if (rpaddle_d == 1) {
-        screen->fillRect(rpaddle_x, rpaddle_y, paddle_w, 1, BLACK);
+        screen->fillRect(rpaddle_x, rpaddle_y, paddle_w, 1, TFT_BLACK);
     } else if (rpaddle_d == -1) {
-        screen->fillRect(rpaddle_x, rpaddle_y + paddle_h - 1, paddle_w, 1, BLACK);
+        screen->fillRect(rpaddle_x, rpaddle_y + paddle_h - 1, paddle_w, 1, TFT_BLACK);
     }
 
     rpaddle_y = rpaddle_y + rpaddle_d;
@@ -211,7 +208,7 @@ void Pong::rpaddle() {
     if (rpaddle_y + paddle_h >= h && rpaddle_d == 1) rpaddle_d = 0;
     else if (rpaddle_y <= 0 && rpaddle_d == -1) rpaddle_d = 0;
 
-    screen->fillRect(rpaddle_x, rpaddle_y, paddle_w, paddle_h, WHITE);
+    screen->fillRect(rpaddle_x, rpaddle_y, paddle_w, paddle_h, TFT_WHITE);
 }
 
 void Pong::ball() {
@@ -235,8 +232,8 @@ void Pong::ball() {
         ball_y += ball_dy; // Keep in bounds
     }
 
-    screen->drawRect(oldball_x, oldball_y, ball_w, ball_h, BLACK);
-    screen->drawRect(   ball_x,    ball_y, ball_w, ball_h, WHITE);
+    screen->drawRect(oldball_x, oldball_y, ball_w, ball_h, TFT_BLACK);
+    screen->drawRect(   ball_x,    ball_y, ball_w, ball_h, TFT_WHITE);
     oldball_x = ball_x;
     oldball_y = ball_y;
 }

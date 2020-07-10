@@ -5,10 +5,6 @@
  */
 #pragma once
 
-#define BLACK TFT_BLACK
-#define WHITE TFT_WHITE
-#define GREY  TFT_LIGHTGREY
-
 #include "actor.h"
 #include "serial_message_queue.h"
 

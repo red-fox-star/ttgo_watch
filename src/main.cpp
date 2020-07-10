@@ -19,8 +19,6 @@ PowerStatus power;
 Display display;
 TaskHandle_t display_task;
 
-static portMUX_TYPE display_mutex;
-
 bool low_power = false;
 
 void ntpRead() {
@@ -123,7 +121,7 @@ void setup(void) {
       | AXP202_LDO4
   , AXP202_OFF);
 
-  watch->eTFT->setTextColor(WHITE, BLACK);
+  watch->eTFT->setTextColor(TFT_WHITE, TFT_BLACK);
   watch->eTFT->setTextFont(8);
   watch->openBL();
 
