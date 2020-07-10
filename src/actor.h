@@ -5,6 +5,18 @@
 
 class Actor {
   public:
+    bool canRequestDisplay() {
+      return ! display_pending;
+    }
+
+    void displayRequested() {
+      display_pending = true;
+    }
+
+    void displayPerformed() {
+      display_pending = false;
+    }
+
     static void setWatch(TTGOClass * _watch) {
       watch = _watch;
       screen = watch->eTFT;
@@ -20,7 +32,11 @@ class Actor {
       display_update = refresh_display;
     }
 
+    virtual void display() = 0;
+    virtual const uint32_t displayIdentifier() = 0;
+
   protected:
+    bool display_pending = false;
     static TTGOClass *watch;
     static TFT_eSPI *screen;
     unsigned int delay_time = 100;
