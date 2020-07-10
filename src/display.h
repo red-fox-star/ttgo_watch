@@ -1,34 +1,34 @@
 #pragma once
-#include "actor.h"
 
 #include "power_status.h"
 #include "clock.h"
+#include "serial_message_queue.h"
 
 #define DISPLAY_POWER 0x1
 #define DISPLAY_PONG 0x2
 #define DISPLAY_WATCH 0x4
 
-class Display : public Actor {
+class Display {
   public:
     PowerStatus * power;
-    Clock * watchface;
+    Clock * watch;
     Pong * pong;
 
     void run() {
-      // Serial.println("time to display things!");
-      watch->eTFT->startWrite();
-
-      if (update_key & power->displayIdentifier())
+      if (update_key & power->displayIdentifier()) {
         power->display();
+        power->displayPerformed();
+      }
 
-      if (update_key & watchface->displayIdentifier())
-        watchface->display();
+      if (update_key & watch->displayIdentifier()) {
+        watch->display();
+        watch->displayPerformed();
+      }
 
-      if (update_key & pong->displayIdentifier())
+      if (update_key & pong->displayIdentifier()) {
         pong->display();
-
-      watch->eTFT->endWrite();
-      // Serial.println("finished displaying things");
+        pong->displayPerformed();
+      }
     }
 
     void notified_by(uint32_t notification_value) {

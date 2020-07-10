@@ -134,11 +134,9 @@ void PowerStatus::run() {
 }
 
 void PowerStatus::display() {
-  Serial.printf("powerstatus display (%i)\n", displayIdentifier());
   if (pluggedIn()) pluggedInSummary();
   else batterySummary();
 
   screen->fillRect(0, 0, 240, 20, TFT_BLACK);
   watch->eTFT->drawString(display_buffer, 0, 0, 2);
 }
-

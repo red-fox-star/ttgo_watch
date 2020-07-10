@@ -1,10 +1,10 @@
 #pragma once
 #include "actor.h"
-#include "displayable.h"
+#include "serial_message_queue.h"
 
 #include "moving_average.h"
 
-class PowerStatus : public Actor, public Displayable {
+class PowerStatus : public Actor {
   public:
     bool ready();
     void run();
@@ -26,6 +26,7 @@ class PowerStatus : public Actor, public Displayable {
 
 
   private:
+
     // calculating and displaying the runtime statistics
     long unsigned int last_run = 0;
     bool _plugged_in = false;

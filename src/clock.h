@@ -1,8 +1,8 @@
 #pragma once
 #include "actor.h"
-#include "displayable.h"
+#include "serial_message_queue.h"
 
-class Clock : public Actor, public Displayable {
+class Clock : public Actor {
   public:
     bool ready();
     void run();
@@ -13,7 +13,10 @@ class Clock : public Actor, public Displayable {
       return 0x4;
     }
 
+
   private:
+    bool display_requested = true;
+
     RTC_Date time;
     int16_t x_middle, y_middle;
 
@@ -24,8 +27,8 @@ class Clock : public Actor, public Displayable {
     int16_t seconds_x = 0;
     int16_t seconds_y = 0;
 
-    int16_t hours_font = 8;
-    int16_t minutes_font = 8;
+    int16_t hours_font = 7;
+    int16_t minutes_font = 7;
     int16_t seconds_font = 4;
 
     int16_t old_hour = 24;

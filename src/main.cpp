@@ -2,8 +2,8 @@
 
 #include <TTGO.h>
 #include <WiFi.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+
+#include "serial_message_queue.h"
 
 #include "pong.h"
 #include "clock.h"
@@ -35,7 +35,7 @@ void ntpRead() {
 
 void connectWifi() {
   WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
-      Serial.println("WiFi connected");
+      q_message_ln("WiFi connected");
       ntpRead();
   }, WiFiEvent_t::SYSTEM_EVENT_STA_CONNECTED);
 
@@ -43,69 +43,59 @@ void connectWifi() {
   WiFi.begin();
 }
 
+void taskRunner(void * object) {
+  for (;;) {
+    bool update_display = false;
+    unsigned int delay_time = 0;
+
+    Actor* actor = (Actor *) object;
+    actor->execute(delay_time, update_display);
+
+    if (actor->canRequestDisplay() && update_display) {
+      actor->displayRequested();
+      xTaskNotify(
+        display_task,
+        actor->displayIdentifier(),
+        eSetValueWithOverwrite
+      );
+    }
+
+    vTaskDelay(delay_time / portTICK_PERIOD_MS);
+  }
+  q_message_ln("deleting a task");
+  vTaskDelete(NULL);
+}
+
 void buildTask(const char * name, Actor * object, int priority = 2) {
-  xTaskCreate(
-      [](void* object){
-        for (;;) {
-          bool update_display = true;
-          unsigned int delay_time = 100;
-
-          Actor* actor = (Actor *) object;
-          Displayable* displayable = (Displayable *) object;
-
-          actor->execute(delay_time, update_display);
-
-          if (update_display) {
-            auto yolo = xTaskNotify(
-              display_task,
-              displayable->displayIdentifier(),
-              eSetValueWithoutOverwrite
-            );
-
-            if (yolo != pdPASS) {
-              Serial.printf("couldn't notify for display of  %#x\n", displayable->displayIdentifier());
-            }
-          }
-
-          // Serial.printf("delaying %#x by %i\n", displayable->displayIdentifier(), delay_time);
-          vTaskDelay(delay_time / portTICK_PERIOD_MS);
-        }
-        Serial.println("deleting a task");
-        vTaskDelete(NULL);
-      },
-      name, 10000, (void *) object, priority, NULL
-  );
+  xTaskCreate(taskRunner, name, 10000, (void *) object, priority, NULL);
 }
 
 void setupDisplayTask() {
   display.power = (PowerStatus*) &power;
-  display.watchface = (Clock*) &watchface;
+  display.watch = (Clock*) &watchface;
   display.pong = (Pong*) &pong;
-
-  vPortCPUInitializeMutex(&display_mutex);
 
   xTaskCreate(
     [](void* object) {
       Display* display = (Display *) object;
-      BaseType_t received;
       uint32_t notification_value;
 
       for (;;) {
-        received = xTaskNotifyWait(0xffffffff, 0xffffffff, &notification_value, 10000);
-        if (received != pdTRUE) continue;
-        // Serial.printf("notified by %#x\n", notification_value);
+        auto success = xTaskNotifyWait(0xffffffff, 0xffffffff, &notification_value, 10000);
+        if (success != pdPASS) continue;
 
-        portENTER_CRITICAL(&display_mutex);
         display->notified_by(notification_value);
+
+        watch->eTFT->startWrite();
         display->run();
-        portEXIT_CRITICAL(&display_mutex);
+        watch->eTFT->endWrite();
       }
 
-      Serial.println("deleting the display task!");
+      q_message_ln("deleting the display task!");
       vTaskDelete(NULL);
     },
     "display", 10000, (void *) &display, 30, &display_task
- );
+  );
 }
 
 void setup(void) {
@@ -113,7 +103,7 @@ void setup(void) {
   // disableCore1WDT();
   // disableCore0WDT();
 
-  Serial.begin(115200);
+  setupSerialMessenger();
 
   randomSeed(analogRead(0)*analogRead(1));
 
@@ -144,25 +134,19 @@ void setup(void) {
 
   WiFi.mode(WIFI_OFF);
 
+  setupDisplayTask();
+
   pong.init();
   watchface.init();
   power.init();
 
-  delay(10);
-  setupDisplayTask();
-
-  // buildTask("pong", &pong, 10);
   buildTask("watchface", &watchface, 9);
-  // buildTask("power", &power, 11);
+  buildTask("pong", &pong, 10);
+  buildTask("power", &power, 11);
 
   // connectWifi();
 
   delay(5000);
-}
-
-int last = 0;
-
-void touchin() {
 }
 
 void loop() {

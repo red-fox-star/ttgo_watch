@@ -10,9 +10,9 @@
 #define GREY  TFT_LIGHTGREY
 
 #include "actor.h"
-#include "displayable.h"
+#include "serial_message_queue.h"
 
-class Pong : public Actor, public Displayable {
+class Pong : public Actor {
   public:
     Pong();
     bool ready();
