@@ -46,6 +46,12 @@ void taskRunner(void * object) {
     unsigned int delay_time = 0;
 
     Actor* actor = (Actor *) object;
+
+    if (power.asleep() && ! actor->runWhileAsleep()) {
+      vTaskDelay(actor->delayWhileAsleep() / portTICK_PERIOD_MS);
+      continue;
+    }
+
     actor->execute(delay_time, update_display);
 
     if (actor->canRequestDisplay() && update_display) {

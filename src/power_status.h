@@ -23,6 +23,7 @@ class PowerStatus : public Actor {
     }
 
     static bool asleep();
+    const bool runWhileAsleep() { return true; }
 
 
   private:
@@ -45,6 +46,8 @@ class PowerStatus : public Actor {
     long unsigned int last_touch = 0;
     long unsigned int wake_time = 0;
     long unsigned int sleep_time = 0;
+    long unsigned int last_interaction = 0;
+
     static bool low_power;
     bool should_wake = false;
 
@@ -52,5 +55,8 @@ class PowerStatus : public Actor {
     void charging(bool state);
     void pluggedIn(bool state);
     bool checkTouch();
-    void touchWake();
+
+    void sleepOrWake();
+    void tryToWake();
+    void tryToSleep();
 };

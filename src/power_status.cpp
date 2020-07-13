@@ -22,13 +22,13 @@ void PowerStatus::powerUp() {
   watch->displayWakeup();
   watch->openBL();
 
-  wake_time = millis();
+  wake_time = last_interaction = millis();
   low_power = false;
 }
 
 bool PowerStatus::checkTouch() {
   if (watch->touch->touched() > 0) {
-    last_touch = millis();
+    last_touch = last_interaction = millis();
     return true;
   }
 
@@ -77,23 +77,27 @@ void PowerStatus::readIRQ() {
   watch->power->clearIRQ();
 }
 
-void PowerStatus::touchWake() {
-  if (low_power) {
-    checkTouch();
+void PowerStatus::sleepOrWake() {
+  checkTouch();
 
-    if (last_touch > sleep_time) {
-      powerUp();
-    }
-  } else {
-    if (millis() - wake_time > 11000) {
-      powerDown();
-    }
+  if (low_power) tryToWake();
+  else tryToSleep();
+}
+
+void PowerStatus::tryToWake() {
+  if (last_touch > sleep_time) {
+    powerUp();
+  }
+}
+
+void PowerStatus::tryToSleep() {
+  if (pluggedIn()) return;
+  if (millis() - last_interaction > 11000) {
+    powerDown();
   }
 }
 
 void PowerStatus::logPower() {
-  if (millis() - last_logged < 100) return;
-  last_logged = millis();
   battery_current.insert(watch->power->getBattDischargeCurrent());
   vbus_current.insert(watch->power->getVbusCurrent());
 }
@@ -119,16 +123,15 @@ void PowerStatus::batterySummary() {
 void PowerStatus::run() {
   if (_read_irq) readIRQ();
 
-  touchWake();
+  sleepOrWake();
   logPower();
 
-  // if (low_power)
-  //   delay_time = 1000;
-  // else
-  //   delay_time = 500;
-  delay_time = 250;
+  if (low_power)
+    delay_time = 1000;
+  else
+    delay_time = 250;
 
-  refresh_display = last_run ++ > 8;
+  refresh_display = !low_power && last_run ++ > 8;
 }
 
 void PowerStatus::display() {

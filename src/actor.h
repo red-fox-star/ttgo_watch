@@ -35,6 +35,10 @@ class Actor {
     virtual void display() = 0;
     virtual const uint32_t displayIdentifier() = 0;
 
+    virtual const bool runWhileAsleep() { return false; }
+    virtual const uint32_t delayWhileAsleep() { return 1000; }
+
+
   protected:
     bool display_pending = false;
     static TTGOClass *watch;

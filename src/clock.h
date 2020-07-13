@@ -27,8 +27,8 @@ class Clock : public Actor {
     int16_t seconds_x = 0;
     int16_t seconds_y = 0;
 
-    int16_t hours_font = 7;
-    int16_t minutes_font = 7;
+    int16_t hours_font = 8;
+    int16_t minutes_font = 8;
     int16_t seconds_font = 4;
 
     int16_t old_hour = 24;
