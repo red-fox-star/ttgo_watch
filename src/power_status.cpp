@@ -11,7 +11,6 @@ void PowerStatus::pluggedIn(bool state) { _plugged_in = state; }
 void PowerStatus::charging(bool state) { _charging = state; }
 
 void PowerStatus::powerDown() {
-  // setCpuFrequencyMhz(40);
   watch->closeBL();
   watch->displaySleep();
 
@@ -20,8 +19,6 @@ void PowerStatus::powerDown() {
 }
 
 void PowerStatus::powerUp() {
-  // setCpuFrequencyMhz(240);
-  // watch->bl->adjust(255);
   watch->displayWakeup();
   watch->openBL();
 

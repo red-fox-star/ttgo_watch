@@ -33,9 +33,7 @@ void Clock::run() {
 }
 
 void Clock::display() {
-  q_message_fmt("clock display (%i:%i:%i) font=%i\n", time.hour, time.minute, time.second, hours_font);
   int16_t position_x;
-
 
   // hour
   if (old_hour != time.hour || time.second % 10 == 0) {

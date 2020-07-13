@@ -11,7 +11,6 @@
 #include "display.h"
 
 TTGOClass *watch;
-PCF8563_Class *rtc;
 
 Pong pong;
 Clock watchface;
@@ -97,13 +96,7 @@ void setupDisplayTask() {
 }
 
 void setup(void) {
-  // setCpuFrequencyMhz(80);
-  // disableCore1WDT();
-  // disableCore0WDT();
-
   setupSerialMessenger();
-
-  randomSeed(analogRead(0)*analogRead(1));
 
   watch = TTGOClass::getWatch();
   watch->begin();

@@ -6,6 +6,49 @@
 
 #include "pong.h"
 
+unsigned short int dly = 10;
+
+int16_t h = 240;
+int16_t w = 240;
+
+int16_t paddle_h = 25;
+int16_t paddle_w = 2;
+
+int16_t lpaddle_x = 0;
+int16_t rpaddle_x = w - paddle_w;
+
+int16_t lpaddle_y = 0;
+int16_t rpaddle_y = h - paddle_h;
+
+int16_t lpaddle_d = 1;
+int16_t rpaddle_d = -1;
+
+int16_t lpaddle_ball_t = w - w / 4;
+int16_t rpaddle_ball_t = w / 4;
+
+int16_t target_y = 0;
+
+int16_t ball_x = 2;
+int16_t ball_y = 2;
+int16_t oldball_x = 2;
+int16_t oldball_y = 2;
+
+int16_t ball_dx = 1;
+int16_t ball_dy = 1;
+
+int16_t ball_w = 4;
+int16_t ball_h = 4;
+
+int16_t dashline_h = 4;
+int16_t dashline_w = 2;
+int16_t dashline_n = h / dashline_h;
+int16_t dashline_x = w / 2 - 1;
+int16_t dashline_y = dashline_h / 2;
+
+int16_t lscore = 12;
+int16_t rscore = 4;
+
+
 Pong::Pong() {
   h = 240;
   w = 240;
@@ -76,48 +119,6 @@ void Pong::display() {
   midline();
   ball();
 }
-
-int16_t h = 240;
-int16_t w = 240;
-
-unsigned short int dly = 10;
-
-int16_t paddle_h = 25;
-int16_t paddle_w = 2;
-
-int16_t lpaddle_x = 0;
-int16_t rpaddle_x = w - paddle_w;
-
-int16_t lpaddle_y = 0;
-int16_t rpaddle_y = h - paddle_h;
-
-int16_t lpaddle_d = 1;
-int16_t rpaddle_d = -1;
-
-int16_t lpaddle_ball_t = w - w / 4;
-int16_t rpaddle_ball_t = w / 4;
-
-int16_t target_y = 0;
-
-int16_t ball_x = 2;
-int16_t ball_y = 2;
-int16_t oldball_x = 2;
-int16_t oldball_y = 2;
-
-int16_t ball_dx = 1;
-int16_t ball_dy = 1;
-
-int16_t ball_w = 4;
-int16_t ball_h = 4;
-
-int16_t dashline_h = 4;
-int16_t dashline_w = 2;
-int16_t dashline_n = h / dashline_h;
-int16_t dashline_x = w / 2 - 1;
-int16_t dashline_y = dashline_h / 2;
-
-int16_t lscore = 12;
-int16_t rscore = 4;
 
 void Pong::midline() {
     // If the ball is not on the line then don't redraw the line
