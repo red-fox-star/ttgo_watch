@@ -11,6 +11,7 @@ void PowerStatus::pluggedIn(bool state) { _plugged_in = state; }
 void PowerStatus::charging(bool state) { _charging = state; }
 
 void PowerStatus::powerDown() {
+  q_message_ln("powering down");
   watch->closeBL();
   watch->displaySleep();
 
@@ -19,11 +20,20 @@ void PowerStatus::powerDown() {
 }
 
 void PowerStatus::powerUp() {
+  q_message_ln("waking up");
   watch->displayWakeup();
   watch->openBL();
 
   wake_time = last_interaction = millis();
   low_power = false;
+}
+
+void PowerStatus::sleepHarder() {
+  esp_sleep_enable_gpio_wakeup();
+  q_message_ln("starting sleep");
+  delay(150);
+  esp_light_sleep_start();
+  q_message_ln("back from sleep");
 }
 
 bool PowerStatus::checkTouch() {
@@ -45,6 +55,8 @@ void PowerStatus::init() {
   watch->power->adc1Enable(
       AXP202_VBUS_VOL_ADC1
   , AXP202_OFF);
+
+  gpio_wakeup_enable((gpio_num_t)AXP202_INT, GPIO_INTR_LOW_LEVEL);
 
   watch->power->enableIRQ(
       AXP202_VBUS_REMOVED_IRQ
@@ -80,8 +92,13 @@ void PowerStatus::readIRQ() {
 void PowerStatus::sleepOrWake() {
   checkTouch();
 
-  if (low_power) tryToWake();
-  else tryToSleep();
+  if (low_power) {
+    tryToWake();
+    if (low_power) tryToSleepHarder();
+
+  } else {
+    tryToSleep();
+  }
 }
 
 void PowerStatus::tryToWake() {
@@ -94,6 +111,12 @@ void PowerStatus::tryToSleep() {
   if (pluggedIn()) return;
   if (millis() - last_interaction > 11000) {
     powerDown();
+  }
+}
+
+void PowerStatus::tryToSleepHarder() {
+  if (millis() - last_interaction > 22000) {
+    sleepHarder();
   }
 }
 

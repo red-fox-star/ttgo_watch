@@ -16,6 +16,7 @@ class PowerStatus : public Actor {
 
     void powerDown();
     void powerUp();
+    void sleepHarder();
 
     void display();
     const uint32_t displayIdentifier() {
@@ -59,4 +60,5 @@ class PowerStatus : public Actor {
     void sleepOrWake();
     void tryToWake();
     void tryToSleep();
+    void tryToSleepHarder();
 };
