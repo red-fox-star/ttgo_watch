@@ -43,6 +43,8 @@ class Actor {
 
     virtual void beforeSleep() { }
     virtual void afterSleep() { }
+    virtual void beforePowerDown() { }
+    virtual void afterPowerDown() { }
 
   protected:
     bool display_pending = false;

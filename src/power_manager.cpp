@@ -55,7 +55,7 @@ void PowerManager::powerUp() {
   low_power = false;
 }
 
-void PowerManager::sleepHarder() {
+void PowerManager::suspend() {
   esp_sleep_enable_gpio_wakeup();
   q_message_ln("starting sleep");
   screen->fillScreen(TFT_BLACK);
@@ -115,6 +115,8 @@ void PowerManager::init() {
 void PowerManager::readIRQ() {
   watch->power->readIRQ();
 
+  last_interaction = millis();
+
   if (watch->power->isVbusPlugInIRQ())   pluggedIn(true);
   if (watch->power->isVbusRemoveIRQ())   pluggedIn(false);
   if (watch->power->isChargingIRQ())     charging(true);
@@ -128,42 +130,40 @@ void PowerManager::readIRQ() {
   watch->power->clearIRQ();
 }
 
-void PowerManager::sleepOrWake() {
-  checkTouch();
-
-  if (low_power) {
-    tryToWake();
-    if (low_power) tryToSleepHarder();
-
-  } else {
-    tryToSleep();
-  }
-}
-
-void PowerManager::tryToWake() {
+void PowerManager::tryToPowerUp() {
   if (last_touch > sleep_time) {
     powerUp();
   }
 }
 
-void PowerManager::tryToSleep() {
+void PowerManager::tryToPowerDown() {
   if (pluggedIn()) return;
-  if (millis() - last_interaction > 11000) {
+  if (millis() - last_interaction > power_down_delay) {
     powerDown();
   }
 }
 
-void PowerManager::tryToSleepHarder() {
-  if (millis() - last_interaction > 15000) {
-    sleepHarder();
+void PowerManager::tryToSuspend() {
+  if (millis() - last_interaction > suspend_delay) {
+    suspend();
   }
 }
 
 void PowerManager::run() {
   if (_read_irq) readIRQ();
+  checkTouch();
 
-  sleepOrWake();
-  logPower();
+  if (low_power) {
+    tryToPowerUp();
+    if (low_power) tryToSuspend();
+  } else {
+    tryToPowerDown();
+  }
+
+  if (millis() - last_logged > 100) {
+    last_logged = millis();
+    logPower();
+  }
 }
 
 void PowerManager::logPower() {

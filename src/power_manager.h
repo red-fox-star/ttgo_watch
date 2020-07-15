@@ -17,9 +17,12 @@ class PowerManager {
 
     void powerDown();
     void powerUp();
-    void sleepHarder();
+    void suspend();
 
   private:
+    uint32_t power_down_delay = 11000;
+    uint32_t suspend_delay = 15000;
+
     static TTGOClass *watch;
     static TFT_eSPI *screen;
 
@@ -30,8 +33,8 @@ class PowerManager {
 
     // statistics about the system
     int battery_percentage;
-    MovingAverage<float, 100> battery_current;
-    MovingAverage<float, 100> vbus_current;
+    MovingAverage<float, 400> battery_current;
+    MovingAverage<float, 400> vbus_current;
     long unsigned int last_logged = 0;
     void logPower();
 
@@ -50,9 +53,9 @@ class PowerManager {
     bool checkTouch();
 
     void sleepOrWake();
-    void tryToWake();
-    void tryToSleep();
-    void tryToSleepHarder();
+    void tryToPowerUp();
+    void tryToPowerDown();
+    void tryToSuspend();
 };
 
 void powerManagementTask(void* object);
