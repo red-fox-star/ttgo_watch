@@ -49,3 +49,6 @@ class PowerManager {
     void tryToSleep();
     void tryToSleepHarder();
 };
+
+void powerManagementTask(void* object);
+void runPowerManagement(PowerManager * power_manager);

@@ -25,7 +25,13 @@ class Actor {
     void displayRequested() { display_pending = true; }
     void displayPerformed() { display_pending = false; }
 
-    virtual void init() {}
+    bool needsInit() { return ! inited; }
+    void setup() {
+      inited = true;
+      init();
+    }
+    virtual void init() { }
+
     virtual void run() = 0;
     void execute(unsigned int & sleep_time, bool & display_update);
 
@@ -37,7 +43,6 @@ class Actor {
 
     virtual void beforeSleep() { }
     virtual void afterSleep() { }
-  private:
 
   protected:
     bool display_pending = false;

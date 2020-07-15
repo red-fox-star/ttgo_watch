@@ -36,6 +36,6 @@ void PowerStatus::display() {
   if (true) pluggedInSummary();
   else batterySummary();
 
-  screen->fillRect(0, 0, 240, 20, TFT_BLACK);
-  watch->eTFT->drawString(display_buffer, 0, 0, 2);
+  screen->setTextPadding(screen->textWidth(display_buffer));
+  screen->drawString(display_buffer, 0, 0, 2);
 }

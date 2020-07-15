@@ -1,5 +1,8 @@
 #include "power_status.h"
 
+TTGOClass * PowerManager::watch = nullptr;
+TFT_eSPI * PowerManager::screen = nullptr;
+
 bool PowerManager::low_power = false;
 
 void PowerManager::interrupt(){ _read_irq = true; }
@@ -130,8 +133,26 @@ void PowerManager::run() {
   sleepOrWake();
 }
 
-void PowerManager::logPower() {
-  battery_current.insert(watch->power->getBattDischargeCurrent());
-  vbus_current.insert(watch->power->getVbusCurrent());
+// void PowerManager::logPower() {
+//   battery_current.insert(watch->power->getBattDischargeCurrent());
+//   vbus_current.insert(watch->power->getVbusCurrent());
+// }
+
+void powerManagementTask(void* object) {
+  PowerManager* power_manager = (PowerManager *) object;
+  uint32_t notification_value;
+
+  power_manager->init();
+
+  for (;;) {
+    power_manager->run();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+
+  q_message_ln("deleting the power management task!");
+  vTaskDelete(NULL);
 }
 
+void runPowerManagement(PowerManager * power_manager) {
+  xTaskCreate(powerManagementTask, "power_manager", 10000, (void *) power_manager, 30, NULL);
+}

@@ -43,10 +43,10 @@ void connectWifi() {
 }
 
 void setup(void) {
-  runSerialMessenger();
-
   watch = TTGOClass::getWatch();
   watch->begin();
+
+  runSerialMessenger();
 
   watch->rtc->check();
   watch->bl->adjust(150);
@@ -70,10 +70,6 @@ void setup(void) {
 
   WiFi.mode(WIFI_OFF);
 
-  display_pong.init();
-  display_clock.init();
-  display_power.init();
-
   display.power = (PowerStatus*) &display_power;
   display.clock = (Clock*) &display_clock;
   display.pong = (Pong*) &display_pong;
@@ -81,6 +77,7 @@ void setup(void) {
   display.system = watch;
 
   runDisplayTask((Display *) &display, &display_task);
+  runPowerManagement((PowerManager *) &power_manager);
 
   Actor::setWatch(watch);
   Actor::setPower((PowerManager *) &power_manager);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "power_status.h"
+#include "pong.h"
 #include "clock.h"
 #include "serial_message_queue.h"
 

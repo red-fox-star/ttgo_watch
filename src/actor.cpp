@@ -50,6 +50,8 @@ void Actor::setDisplayTask(TaskHandle_t _display_task) { display_task = _display
 void Actor::execute(unsigned int & sleep_time, bool & display_update) {
   refresh_display = false;
 
+  if (needsInit()) setup();
+
   run();
 
   sleep_time = delay_time;

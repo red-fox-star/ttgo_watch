@@ -23,6 +23,7 @@ class Clock : public Actor {
     int16_t hours_y = 0;
     int16_t minutes_x = 0;
     int16_t minutes_y = 0;
+    int16_t hours_minutes_space = 0;
     int16_t seconds_x = 0;
     int16_t seconds_y = 0;
     int16_t seconds_space = 0;
