@@ -14,6 +14,8 @@ class PowerManager {
     int batteryPercentage();
     float batteryCurrent();
     float vbusCurrent();
+    long unsigned int lastInteraction() { return last_interaction; }
+    long unsigned int now() { return _now; }
 
     void powerDown();
     void powerUp();
@@ -30,11 +32,12 @@ class PowerManager {
     bool _plugged_in = false;
     bool _charging = false;
     bool _read_irq = false;
+    long unsigned int _now = 0;
 
     // statistics about the system
     int battery_percentage;
-    MovingAverage<float, 400> battery_current;
-    MovingAverage<float, 400> vbus_current;
+    MovingAverage<float, 50> battery_current;
+    MovingAverage<float, 50> vbus_current;
     long unsigned int last_logged = 0;
     void logPower();
 
@@ -44,8 +47,7 @@ class PowerManager {
     long unsigned int sleep_time = 0;
     long unsigned int last_interaction = 0;
 
-    bool low_power = false;
-    bool should_wake = false;
+    bool _low_power = false;
 
     void readIRQ();
     void charging(bool state);

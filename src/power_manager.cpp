@@ -5,7 +5,7 @@ TFT_eSPI * PowerManager::screen = nullptr;
 
 void PowerManager::interrupt(){ _read_irq = true; }
 
-bool PowerManager::lowPower() { return low_power; }
+bool PowerManager::lowPower() { return _low_power; }
 bool PowerManager::pluggedIn() { return _plugged_in; }
 bool PowerManager::charging() { return _charging; }
 void PowerManager::pluggedIn(bool state) { _plugged_in = state; }
@@ -42,8 +42,8 @@ void PowerManager::powerDown() {
   watch->closeBL();
   watch->displaySleep();
 
-  low_power = true;
-  sleep_time = now;
+  _low_power = true;
+  sleep_time = now();
 }
 
 void PowerManager::powerUp() {
@@ -51,8 +51,8 @@ void PowerManager::powerUp() {
   watch->displayWakeup();
   watch->openBL();
 
-  wake_time = last_interaction = now;
-  low_power = false;
+  wake_time = last_interaction = now();
+  _low_power = false;
 }
 
 void PowerManager::suspend() {
@@ -66,7 +66,7 @@ void PowerManager::suspend() {
 
 bool PowerManager::checkTouch() {
   if (watch->touch->touched() > 0) {
-    last_touch = last_interaction = now;
+    last_touch = last_interaction = now();
     return true;
   }
 
@@ -116,7 +116,7 @@ void PowerManager::readIRQ() {
   watch->power->readIRQ();
   _read_irq = false;
 
-  last_interaction = now;
+  last_interaction = now();
 
   if (watch->power->isVbusPlugInIRQ())   pluggedIn(true);
   if (watch->power->isVbusRemoveIRQ())   pluggedIn(false);
@@ -124,7 +124,7 @@ void PowerManager::readIRQ() {
   if (watch->power->isChargingDoneIRQ()) charging(false);
 
   if (watch->power->isPEKShortPressIRQ()) {
-    if (low_power) powerUp();
+    if (lowPower()) powerUp();
     else powerDown();
   }
 
@@ -139,31 +139,32 @@ void PowerManager::tryToPowerUp() {
 
 void PowerManager::tryToPowerDown() {
   if (pluggedIn()) return;
-  if (now - last_interaction > power_down_delay) {
+  if (now() - last_interaction > power_down_delay) {
     powerDown();
   }
 }
 
 void PowerManager::tryToSuspend() {
-  if (now - last_interaction > suspend_delay) {
+  if (now() - last_interaction > suspend_delay) {
     suspend();
   }
 }
 
 void PowerManager::run() {
-  now = millis();
+  _now = millis();
+
   if (_read_irq) readIRQ();
   checkTouch();
 
-  if (low_power) {
+  if (lowPower()) {
     tryToPowerUp();
-    if (low_power) tryToSuspend();
+    if (lowPower()) tryToSuspend();
   } else {
     tryToPowerDown();
   }
 
-  if (now - last_logged > 500) {
-    last_logged = now;
+  if (now() - last_logged > 500) {
+    last_logged = now();
     logPower();
   }
 }
