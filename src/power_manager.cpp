@@ -114,6 +114,7 @@ void PowerManager::init() {
 
 void PowerManager::readIRQ() {
   watch->power->readIRQ();
+  _read_irq = false;
 
   last_interaction = now;
 
