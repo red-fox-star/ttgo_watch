@@ -51,13 +51,6 @@ void setup(void) {
   watch->rtc->check();
   watch->bl->adjust(150);
 
-  watch->power->setPowerOutPut(
-      AXP202_EXTEN
-      | AXP202_DCDC2
-      | AXP202_LDO3
-      | AXP202_LDO4
-  , AXP202_OFF);
-
   watch->eTFT->fillScreen(TFT_BLACK);
   watch->eTFT->setTextColor(TFT_WHITE, TFT_BLACK);
   watch->eTFT->setTextFont(8);

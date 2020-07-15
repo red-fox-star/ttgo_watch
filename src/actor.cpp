@@ -8,8 +8,8 @@ void actorTask(void * object) {
 
     Actor* actor = (Actor *) object;
 
-    if (actor->power->asleep() && ! actor->runWhileAsleep()) {
-      vTaskDelay(actor->delayWhileAsleep() / portTICK_PERIOD_MS);
+    if (actor->power->lowPower() && ! actor->runDuringLowPower()) {
+      vTaskDelay(actor->delayDuringLowPower() / portTICK_PERIOD_MS);
       continue;
     }
 

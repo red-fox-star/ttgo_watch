@@ -38,8 +38,8 @@ class Actor {
     virtual void display() = 0;
     virtual const uint32_t displayIdentifier() = 0;
 
-    virtual const bool runWhileAsleep() { return false; }
-    virtual const uint32_t delayWhileAsleep() { return 1000; }
+    virtual const bool runDuringLowPower() { return false; }
+    virtual const uint32_t delayDuringLowPower() { return 1000; }
 
     virtual void beforeSleep() { }
     virtual void afterSleep() { }

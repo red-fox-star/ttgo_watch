@@ -3,27 +3,23 @@
 void PowerStatus::pluggedInSummary() {
   snprintf(display_buffer, sizeof(display_buffer),
       "%i%%%s %4.1fmA %4.1fmA",
-      watch->power->getBattPercentage(),
-      "",
-      0.0, 0.0
+      power->batteryPercentage(),
+      power->charging() ? "+" : "",
+      power->batteryCurrent(),
+      power->vbusCurrent()
   );
-      // charging() ? "+" : "",
-      // battery_current.average(),
-      // vbus_current.average()
 }
 
 void PowerStatus::batterySummary() {
   snprintf(display_buffer, sizeof(display_buffer),
       "%i%% %4.1fmA",
       watch->power->getBattPercentage(),
-      0.0
+      power->batteryCurrent()
   );
-      // battery_current.average()
 }
 
 void PowerStatus::run() {
-  // if (low_power)
-  if (false)
+  if (power->lowPower())
     delay_time = 1000;
   else
     delay_time = 250;
@@ -32,8 +28,7 @@ void PowerStatus::run() {
 }
 
 void PowerStatus::display() {
-  // if (pluggedIn()) pluggedInSummary();
-  if (true) pluggedInSummary();
+  if (power->pluggedIn()) pluggedInSummary();
   else batterySummary();
 
   screen->setTextPadding(screen->textWidth(display_buffer));

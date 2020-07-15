@@ -3,15 +3,39 @@
 TTGOClass * PowerManager::watch = nullptr;
 TFT_eSPI * PowerManager::screen = nullptr;
 
-bool PowerManager::low_power = false;
-
 void PowerManager::interrupt(){ _read_irq = true; }
 
-bool PowerManager::asleep() { return low_power; }
+bool PowerManager::lowPower() { return low_power; }
 bool PowerManager::pluggedIn() { return _plugged_in; }
 bool PowerManager::charging() { return _charging; }
 void PowerManager::pluggedIn(bool state) { _plugged_in = state; }
 void PowerManager::charging(bool state) { _charging = state; }
+
+int PowerManager::batteryPercentage() {
+  int actual_percentage = watch->power->getBattPercentage();
+
+  if (pluggedIn()) {
+    if (actual_percentage < battery_percentage) {
+      return battery_percentage;
+    } else {
+      return battery_percentage = actual_percentage;
+    }
+  } else {
+    if (actual_percentage > battery_percentage) {
+      return battery_percentage;
+    } else {
+      return battery_percentage = actual_percentage;
+    }
+  }
+}
+
+float PowerManager::batteryCurrent() {
+  return battery_current.average();
+}
+
+float PowerManager::vbusCurrent() {
+  return vbus_current.average();
+}
 
 void PowerManager::powerDown() {
   q_message_ln("powering down");
@@ -23,7 +47,7 @@ void PowerManager::powerDown() {
 }
 
 void PowerManager::powerUp() {
-  q_message_ln("waking up");
+  q_message_ln("powering up");
   watch->displayWakeup();
   watch->openBL();
 
@@ -53,6 +77,13 @@ void PowerManager::init() {
   watch = TTGOClass::getWatch();
   screen = watch->eTFT;
 
+  watch->power->setPowerOutPut(
+      AXP202_EXTEN
+      | AXP202_DCDC2
+      | AXP202_LDO3
+      | AXP202_LDO4
+  , AXP202_OFF);
+
   watch->power->adc1Enable(
       AXP202_BATT_VOL_ADC1
       | AXP202_BATT_CUR_ADC1
@@ -78,6 +109,7 @@ void PowerManager::init() {
 
   pluggedIn(watch->power->isVBUSPlug());
   charging(watch->power->isChargeingEnable());
+  battery_percentage = watch->power->getBattPercentage();
 }
 
 void PowerManager::readIRQ() {
@@ -131,16 +163,16 @@ void PowerManager::run() {
   if (_read_irq) readIRQ();
 
   sleepOrWake();
+  logPower();
 }
 
-// void PowerManager::logPower() {
-//   battery_current.insert(watch->power->getBattDischargeCurrent());
-//   vbus_current.insert(watch->power->getVbusCurrent());
-// }
+void PowerManager::logPower() {
+  battery_current.insert(watch->power->getBattDischargeCurrent());
+  vbus_current.insert(watch->power->getVbusCurrent());
+}
 
 void powerManagementTask(void* object) {
   PowerManager* power_manager = (PowerManager *) object;
-  uint32_t notification_value;
 
   power_manager->init();
 
