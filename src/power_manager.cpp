@@ -43,7 +43,7 @@ void PowerManager::powerDown() {
   watch->displaySleep();
 
   low_power = true;
-  sleep_time = millis();
+  sleep_time = now;
 }
 
 void PowerManager::powerUp() {
@@ -51,7 +51,7 @@ void PowerManager::powerUp() {
   watch->displayWakeup();
   watch->openBL();
 
-  wake_time = last_interaction = millis();
+  wake_time = last_interaction = now;
   low_power = false;
 }
 
@@ -66,7 +66,7 @@ void PowerManager::suspend() {
 
 bool PowerManager::checkTouch() {
   if (watch->touch->touched() > 0) {
-    last_touch = last_interaction = millis();
+    last_touch = last_interaction = now;
     return true;
   }
 
@@ -115,7 +115,7 @@ void PowerManager::init() {
 void PowerManager::readIRQ() {
   watch->power->readIRQ();
 
-  last_interaction = millis();
+  last_interaction = now;
 
   if (watch->power->isVbusPlugInIRQ())   pluggedIn(true);
   if (watch->power->isVbusRemoveIRQ())   pluggedIn(false);
@@ -138,18 +138,19 @@ void PowerManager::tryToPowerUp() {
 
 void PowerManager::tryToPowerDown() {
   if (pluggedIn()) return;
-  if (millis() - last_interaction > power_down_delay) {
+  if (now - last_interaction > power_down_delay) {
     powerDown();
   }
 }
 
 void PowerManager::tryToSuspend() {
-  if (millis() - last_interaction > suspend_delay) {
+  if (now - last_interaction > suspend_delay) {
     suspend();
   }
 }
 
 void PowerManager::run() {
+  now = millis();
   if (_read_irq) readIRQ();
   checkTouch();
 
@@ -160,8 +161,8 @@ void PowerManager::run() {
     tryToPowerDown();
   }
 
-  if (millis() - last_logged > 100) {
-    last_logged = millis();
+  if (now - last_logged > 500) {
+    last_logged = now;
     logPower();
   }
 }
