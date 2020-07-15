@@ -19,17 +19,14 @@ class Display {
     void run() {
       if (update_key & power->displayIdentifier()) {
         power->display();
-        power->displayPerformed();
       }
 
       if (update_key & clock->displayIdentifier()) {
         clock->display();
-        clock->displayPerformed();
       }
 
       if (update_key & pong->displayIdentifier()) {
         pong->display();
-        pong->displayPerformed();
       }
     }
 

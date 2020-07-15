@@ -9,21 +9,20 @@ void actorTask(void * object) {
     Actor* actor = (Actor *) object;
 
     if (actor->power->lowPower() && ! actor->runDuringLowPower()) {
+      q_message_fmt("actor %i cannot display during low power\n", actor->displayIdentifier());
       vTaskDelay(actor->delayDuringLowPower() / portTICK_PERIOD_MS);
       continue;
     }
 
     actor->execute(delay_time, update_display);
 
-    if (actor->canRequestDisplay() && update_display) {
-      actor->displayRequested();
+    if (update_display) {
       xTaskNotify(
         actor->display_task,
         actor->displayIdentifier(),
         eSetValueWithOverwrite
       );
     }
-
     vTaskDelay(delay_time / portTICK_PERIOD_MS);
   }
   q_message_ln("deleting a task");

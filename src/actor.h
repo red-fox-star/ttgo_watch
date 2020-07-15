@@ -21,10 +21,6 @@ class Actor {
     static void setPower(PowerManager * _power);
     static void setDisplayTask(TaskHandle_t _display_task);
 
-    bool canRequestDisplay() { return ! display_pending; }
-    void displayRequested() { display_pending = true; }
-    void displayPerformed() { display_pending = false; }
-
     bool needsInit() { return ! inited; }
     void setup() {
       inited = true;
