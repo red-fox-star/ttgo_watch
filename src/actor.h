@@ -8,34 +8,26 @@
 
 class Actor {
   public:
-    bool canRequestDisplay() {
-      return ! display_pending;
-    }
-
-    void displayRequested() {
-      display_pending = true;
-    }
-
-    void displayPerformed() {
-      display_pending = false;
-    }
+    static TTGOClass *watch;
+    static TFT_eSPI *screen;
     static PowerManager * power;
+    static TaskHandle_t display_task;
 
     static void setWatch(TTGOClass * _watch) {
       watch = _watch;
       screen = watch->eTFT;
     }
 
-    virtual void run() = 0;
-    void execute(unsigned int & sleep_time, bool & display_update) {
-      refresh_display = false;
     static void setPower(PowerManager * _power);
+    static void setDisplayTask(TaskHandle_t _display_task);
 
-      run();
+    bool canRequestDisplay() { return ! display_pending; }
+    void displayRequested() { display_pending = true; }
+    void displayPerformed() { display_pending = false; }
 
-      sleep_time = delay_time;
-      display_update = refresh_display;
-    }
+    virtual void init() {}
+    virtual void run() = 0;
+    void execute(unsigned int & sleep_time, bool & display_update);
 
     virtual void display() = 0;
     virtual const uint32_t displayIdentifier() = 0;
@@ -43,11 +35,18 @@ class Actor {
     virtual const bool runWhileAsleep() { return false; }
     virtual const uint32_t delayWhileAsleep() { return 1000; }
 
+    virtual void beforeSleep() { }
+    virtual void afterSleep() { }
+  private:
 
   protected:
     bool display_pending = false;
-    static TTGOClass *watch;
-    static TFT_eSPI *screen;
+    bool inited = false;
+
     unsigned int delay_time = 100;
     bool refresh_display = false;
 };
+
+void actorTask(void * object);
+void runActor(const char * name, Actor * object, int priority);
+

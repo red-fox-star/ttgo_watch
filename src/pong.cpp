@@ -94,7 +94,8 @@ Pong::Pong() {
 }
 
 void Pong::init() {
-  screen->fillScreen(TFT_BLACK);
+  inited = true;
+
   lpaddle_y = random(0, h - paddle_h);
   rpaddle_y = random(0, h - paddle_h);
 
@@ -103,9 +104,7 @@ void Pong::init() {
 
   calc_target_y();
 
-  midline();
-
-  screen->fillRect(0, h - 26, w, h - 1, TFT_BLACK);
+  // midline();
 }
 
 void Pong::run() {

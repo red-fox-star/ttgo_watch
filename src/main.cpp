@@ -13,9 +13,9 @@
 
 TTGOClass *watch;
 
-Pong pong;
-Clock watchface;
-PowerStatus power;
+Pong display_pong;
+Clock display_clock;
+PowerStatus display_power;
 PowerManager power_manager;
 Display display;
 TaskHandle_t display_task;
@@ -42,67 +42,6 @@ void connectWifi() {
   WiFi.begin();
 }
 
-void taskRunner(void * object) {
-  for (;;) {
-    bool update_display = false;
-    unsigned int delay_time = 0;
-
-    Actor* actor = (Actor *) object;
-
-    if (power.asleep() && ! actor->runWhileAsleep()) {
-      vTaskDelay(actor->delayWhileAsleep() / portTICK_PERIOD_MS);
-      continue;
-    }
-
-    actor->execute(delay_time, update_display);
-
-    if (actor->canRequestDisplay() && update_display) {
-      actor->displayRequested();
-      xTaskNotify(
-        display_task,
-        actor->displayIdentifier(),
-        eSetValueWithOverwrite
-      );
-    }
-
-    vTaskDelay(delay_time / portTICK_PERIOD_MS);
-  }
-  q_message_ln("deleting a task");
-  vTaskDelete(NULL);
-}
-
-void buildTask(const char * name, Actor * object, int priority = 2) {
-  xTaskCreate(taskRunner, name, 10000, (void *) object, priority, NULL);
-}
-
-void setupDisplayTask() {
-  display.power = (PowerStatus*) &power;
-  display.watch = (Clock*) &watchface;
-  display.pong = (Pong*) &pong;
-
-  xTaskCreate(
-    [](void* object) {
-      Display* display = (Display *) object;
-      uint32_t notification_value;
-
-      for (;;) {
-        auto success = xTaskNotifyWait(0xffffffff, 0xffffffff, &notification_value, 10000);
-        if (success != pdPASS) continue;
-
-        display->notified_by(notification_value);
-
-        watch->eTFT->startWrite();
-        display->run();
-        watch->eTFT->endWrite();
-      }
-
-      q_message_ln("deleting the display task!");
-      vTaskDelete(NULL);
-    },
-    "display", 10000, (void *) &display, 30, &display_task
-  );
-}
-
 void setup(void) {
   runSerialMessenger();
 
@@ -119,6 +58,7 @@ void setup(void) {
       | AXP202_LDO4
   , AXP202_OFF);
 
+  watch->eTFT->fillScreen(TFT_BLACK);
   watch->eTFT->setTextColor(TFT_WHITE, TFT_BLACK);
   watch->eTFT->setTextFont(8);
   watch->openBL();
@@ -130,20 +70,27 @@ void setup(void) {
 
   WiFi.mode(WIFI_OFF);
 
-  setupDisplayTask();
+  display_pong.init();
+  display_clock.init();
+  display_power.init();
 
-  pong.init();
-  watchface.init();
-  power.init();
+  display.power = (PowerStatus*) &display_power;
+  display.clock = (Clock*) &display_clock;
+  display.pong = (Pong*) &display_pong;
 
-  buildTask("watchface", &watchface, 9);
-  buildTask("pong", &pong, 10);
-  buildTask("power", &power, 11);
+  display.system = watch;
 
-  // connectWifi();
+  runDisplayTask((Display *) &display, &display_task);
 
   Actor::setWatch(watch);
   Actor::setPower((PowerManager *) &power_manager);
+  Actor::setDisplayTask(display_task);
+
+  runActor("watchface", &display_clock, 9);
+  runActor("pong", &display_pong, 10);
+  runActor("power", &display_power, 11);
+
+  // connectWifi();
 }
 
 void loop() {

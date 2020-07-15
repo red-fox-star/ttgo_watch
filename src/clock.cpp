@@ -1,15 +1,16 @@
 #include "clock.h"
 
 void Clock::init() {
-  screen->fillScreen(TFT_BLACK);
-  screen->setTextColor(TFT_WHITE, TFT_BLACK);
+}
 
-  watch->power->adc1Enable(
-      AXP202_VBUS_VOL_ADC1
-      | AXP202_VBUS_CUR_ADC1
-      | AXP202_BATT_CUR_ADC1
-      | AXP202_BATT_VOL_ADC1
-  , true);
+void Clock::run() {
+  time = watch->rtc->getDateTime();
+  delay_time = 250;
+  refresh_display = time.second != old_second;
+}
+
+void Clock::display() {
+  int16_t position_x;
 
   x_middle = screen->width() / 2;
   y_middle = screen->height() / 2;
@@ -24,16 +25,6 @@ void Clock::init() {
 
   seconds_x = x_middle - screen->textWidth("0", seconds_font);
   seconds_y = y_middle + hours_half_height + 10;
-}
-
-void Clock::run() {
-  time = watch->rtc->getDateTime();
-  delay_time = 250;
-  refresh_display = time.second != old_second;
-}
-
-void Clock::display() {
-  int16_t position_x;
 
   // hour
   if (old_hour != time.hour || time.second % 10 == 0) {

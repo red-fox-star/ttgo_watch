@@ -11,8 +11,9 @@
 class Display {
   public:
     PowerStatus * power;
-    Clock * watch;
+    Clock * clock;
     Pong * pong;
+    TTGOClass * system;
 
     void run() {
       if (update_key & power->displayIdentifier()) {
@@ -20,9 +21,9 @@ class Display {
         power->displayPerformed();
       }
 
-      if (update_key & watch->displayIdentifier()) {
-        watch->display();
-        watch->displayPerformed();
+      if (update_key & clock->displayIdentifier()) {
+        clock->display();
+        clock->displayPerformed();
       }
 
       if (update_key & pong->displayIdentifier()) {
@@ -38,3 +39,6 @@ class Display {
   private:
     uint32_t update_key = 0;
 };
+
+void displayTask(void* object);
+void runDisplayTask(Display * display, TaskHandle_t * display_task);
