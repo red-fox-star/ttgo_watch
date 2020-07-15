@@ -3,6 +3,8 @@
 
 #include <TTGO.h>
 
+#include "power_manager.h"
+
 class Actor {
   public:
     bool canRequestDisplay() {
@@ -16,6 +18,7 @@ class Actor {
     void displayPerformed() {
       display_pending = false;
     }
+    static PowerManager * power;
 
     static void setWatch(TTGOClass * _watch) {
       watch = _watch;
@@ -25,6 +28,7 @@ class Actor {
     virtual void run() = 0;
     void execute(unsigned int & sleep_time, bool & display_update) {
       refresh_display = false;
+    static void setPower(PowerManager * _power);
 
       run();
 

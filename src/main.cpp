@@ -4,6 +4,7 @@
 #include <WiFi.h>
 
 #include "serial_message_queue.h"
+#include "power_manager.h"
 
 #include "pong.h"
 #include "clock.h"
@@ -15,6 +16,7 @@ TTGOClass *watch;
 Pong pong;
 Clock watchface;
 PowerStatus power;
+PowerManager power_manager;
 Display display;
 TaskHandle_t display_task;
 
@@ -107,10 +109,7 @@ void setup(void) {
   watch = TTGOClass::getWatch();
   watch->begin();
 
-  Actor::setWatch(watch);
-
   watch->rtc->check();
-
   watch->bl->adjust(150);
 
   watch->power->setPowerOutPut(
@@ -126,7 +125,7 @@ void setup(void) {
 
   pinMode(AXP202_INT, INPUT);
   attachInterrupt(AXP202_INT, [] {
-      power.interrupt();
+      power_manager.interrupt();
   }, FALLING);
 
   WiFi.mode(WIFI_OFF);
@@ -143,7 +142,8 @@ void setup(void) {
 
   // connectWifi();
 
-  delay(5000);
+  Actor::setWatch(watch);
+  Actor::setPower((PowerManager *) &power_manager);
 }
 
 void loop() {
