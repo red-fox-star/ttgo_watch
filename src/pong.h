@@ -6,7 +6,6 @@
 #pragma once
 
 #include "actor.h"
-#include "serial_message_queue.h"
 
 class Pong : public Actor {
   public:

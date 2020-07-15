@@ -16,7 +16,7 @@ void q_message(String text);
 void q_message(const char * text);
 void q_message_ln(const char * text);
 void q_message_fmt(const char * format, ...);
-void setupSerialMessenger();
+void runSerialMessenger();
 
 extern TaskHandle_t serial;
 extern QueueHandle_t serial_queue;

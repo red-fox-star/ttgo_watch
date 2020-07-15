@@ -3,6 +3,7 @@
 
 #include <TTGO.h>
 
+#include "serial_message_queue.h"
 #include "power_manager.h"
 
 class Actor {

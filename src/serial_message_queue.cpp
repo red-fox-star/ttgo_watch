@@ -35,7 +35,7 @@ void q_message_fmt(const char * format, ...) {
   q_message(buffer);
 }
 
-void setupSerialMessenger() {
+void runSerialMessenger() {
   Serial.begin(115200);
 
   serial_queue = xQueueCreate(10, sizeof(SerialMessage));

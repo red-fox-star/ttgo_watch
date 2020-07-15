@@ -104,7 +104,7 @@ void setupDisplayTask() {
 }
 
 void setup(void) {
-  setupSerialMessenger();
+  runSerialMessenger();
 
   watch = TTGOClass::getWatch();
   watch->begin();
