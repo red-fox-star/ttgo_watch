@@ -94,8 +94,6 @@ Pong::Pong() {
 }
 
 void Pong::init() {
-  inited = true;
-
   lpaddle_y = random(0, h - paddle_h);
   rpaddle_y = random(0, h - paddle_h);
 
@@ -103,8 +101,6 @@ void Pong::init() {
   ball_y = lpaddle_y + (paddle_h / 2);
 
   calc_target_y();
-
-  // midline();
 }
 
 void Pong::run() {

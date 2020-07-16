@@ -13,41 +13,40 @@ class Actor {
     static PowerManager * power;
     static TaskHandle_t display_task;
 
-    static void setWatch(TTGOClass * _watch) {
-      watch = _watch;
-      screen = watch->eTFT;
-    }
-
+    // system accessors
     static void setPower(PowerManager * _power);
     static void setDisplayTask(TaskHandle_t _display_task);
+    static void setWatch(TTGOClass * _watch);
 
-    bool needsInit() { return ! inited; }
-    void setup() {
-      inited = true;
-      init();
-    }
+    // setup and init
+    bool needsInit();
+    void setup();
     virtual void init() { }
 
+    // run and display
     virtual void run() = 0;
     void execute(unsigned int & sleep_time, bool & display_update);
-
     virtual void display() = 0;
     virtual const uint32_t displayIdentifier() = 0;
 
+    // low power considerations
     virtual const bool runDuringLowPower() { return false; }
     virtual const uint32_t delayDuringLowPower() { return 1000; }
 
-    virtual void beforeSleep() { }
-    virtual void afterSleep() { }
-    virtual void beforePowerDown() { }
-    virtual void afterPowerDown() { }
+    // sleep-wake
+    static void systemWokeUp();
+    void checkWakeTime();
+    bool wakeUpRun();
 
   protected:
-    bool display_pending = false;
-    bool inited = false;
-
     unsigned int delay_time = 100;
     bool refresh_display = false;
+
+  private:
+    static unsigned int woke_up_at;
+    unsigned int last_wake_up_processed = 0;
+    bool wake_up_run = true;
+    bool inited = false;
 };
 
 void actorTask(void * object);

@@ -22,16 +22,19 @@ void Clock::init() {
 void Clock::run() {
   time = watch->rtc->getDateTime();
   delay_time = 250;
-  refresh_display = time.second != old_second;
+
+  if (wakeUpRun()) redisplay = true;
+
+  refresh_display = redisplay || time.second != old_second;
 }
 
 void Clock::display() {
   int16_t position_x;
 
-  if (time.second % 10 == 0) old_hour = old_minute = 61;
+  redisplay = redisplay || time.second % 10 == 0;
 
   // hour
-  if (old_hour != time.hour) {
+  if (redisplay || old_hour != time.hour) {
     old_hour = time.hour;
     position_x = hours_x;
     screen->setTextPadding(screen->textWidth("0", hours_font));
@@ -40,7 +43,7 @@ void Clock::display() {
   }
 
   // minute
-  if (old_minute != time.minute) {
+  if (redisplay || old_minute != time.minute) {
     old_minute = time.minute;
     position_x = minutes_x;
     screen->setTextPadding(screen->textWidth("0", minutes_font));

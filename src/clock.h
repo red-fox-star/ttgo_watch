@@ -14,7 +14,7 @@ class Clock : public Actor {
 
 
   private:
-    bool display_requested = true;
+    bool redisplay = false;
 
     RTC_Date time;
     int16_t x_middle, y_middle;

@@ -2,6 +2,8 @@
 
 #include "moving_average.h"
 
+class Actor;
+
 class PowerManager {
   public:
     void init();

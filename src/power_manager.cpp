@@ -57,11 +57,11 @@ void PowerManager::powerUp() {
 
 void PowerManager::suspend() {
   esp_sleep_enable_gpio_wakeup();
-  q_message_ln("starting sleep");
+  q_message_fmt("starting sleep\n");
   screen->fillScreen(TFT_BLACK);
-  delay(75);
   esp_light_sleep_start();
-  q_message_ln("back from sleep");
+  Actor::systemWokeUp();
+  q_message_fmt("back from sleep\n");
 }
 
 bool PowerManager::checkTouch() {
@@ -116,19 +116,20 @@ void PowerManager::readIRQ() {
   watch->power->readIRQ();
   _read_irq = false;
 
-  last_interaction = now();
-
   if (watch->power->isVbusPlugInIRQ())   pluggedIn(true);
   if (watch->power->isVbusRemoveIRQ())   pluggedIn(false);
   if (watch->power->isChargingIRQ())     charging(true);
   if (watch->power->isChargingDoneIRQ()) charging(false);
 
   if (watch->power->isPEKShortPressIRQ()) {
-    if (lowPower()) powerUp();
-    else powerDown();
+    if (now() - last_interaction > 200) {
+      if (lowPower()) powerUp();
+      else powerDown();
+    }
   }
 
   watch->power->clearIRQ();
+  last_interaction = now();
 }
 
 void PowerManager::tryToPowerUp() {
