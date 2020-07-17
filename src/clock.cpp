@@ -4,19 +4,22 @@ void Clock::init() {
   x_middle = screen->width() / 2;
   y_middle = screen->height() / 2;
 
-  int16_t hours_half_height = screen->fontHeight(hours_font) / 2;
-  int16_t seconds_width_zero = screen->textWidth("0", seconds_font);
+  int16_t hours_half_height = screen->fontHeight(hour.font) / 2;
+  int16_t seconds_width_zero = screen->textWidth("0", second.font);
   hours_minutes_space = 10;
-  seconds_space = seconds_width_zero / 2;
+  second.space = seconds_width_zero / 2;
 
-  hours_x = x_middle - screen->textWidth("00", hours_font) - (hours_minutes_space / 2);
-  hours_y = y_middle - hours_half_height;
+  hour.x = x_middle - screen->textWidth("00", hour.font) - (hours_minutes_space / 2);
+  hour.y = y_middle - hours_half_height;
 
-  minutes_x = x_middle + (hours_minutes_space / 2);
-  minutes_y = hours_y;
+  minute.x = x_middle + (hours_minutes_space / 2);
+  minute.y = hour.y;
 
-  seconds_x = x_middle - seconds_width_zero - (seconds_space / 2);
-  seconds_y = y_middle + hours_half_height + 10;
+  second.x = x_middle - seconds_width_zero - (second.space / 2);
+  second.y = y_middle + hours_half_height + 10;
+
+  date.x = 0;
+  date.y = screen->height() - (screen->fontHeight(second.font) + 2);
 }
 
 void Clock::run() {
@@ -33,35 +36,45 @@ void Clock::display() {
 
   redisplay = redisplay || time.second % 10 == 0;
 
+  if (redisplay || time.day != old_day) {
+    old_day = time.day;
+    position_x = date.x;
+    position_x += screen->drawNumber(time.month, position_x, date.y, date.font);
+    position_x += screen->drawChar('.', position_x, date.y, date.font);
+    position_x += screen->drawNumber(time.day, position_x, date.y, date.font);
+  }
+
   // hour
   if (redisplay || old_hour != time.hour) {
     old_hour = time.hour;
-    position_x = hours_x;
-    screen->setTextPadding(screen->textWidth("0", hours_font));
-    if (time.hour < 10) position_x += screen->drawChar('0', position_x, hours_y, hours_font);
-    position_x += screen->drawNumber(time.hour, position_x, hours_y, hours_font);
+    position_x = hour.x;
+    screen->setTextPadding(screen->textWidth("0", hour.font));
+    if (time.hour < 10) position_x += screen->drawChar('0', position_x, hour.y, hour.font);
+    position_x += screen->drawNumber(time.hour, position_x, hour.y, hour.font);
   }
 
   // minute
   if (redisplay || old_minute != time.minute) {
     old_minute = time.minute;
-    position_x = minutes_x;
-    screen->setTextPadding(screen->textWidth("0", minutes_font));
-    if (time.minute < 10) position_x += screen->drawChar('0', position_x, minutes_y, minutes_font);
-    position_x += screen->drawNumber(time.minute, position_x, minutes_y, minutes_font);
+    position_x = minute.x;
+    screen->setTextPadding(screen->textWidth("0", minute.font));
+    if (time.minute < 10) position_x += screen->drawChar('0', position_x, minute.y, minute.font);
+    position_x += screen->drawNumber(time.minute, position_x, minute.y, minute.font);
   }
 
   // seconds
   old_second = time.second;
-  position_x = seconds_x;
-  screen->setTextPadding(screen->textWidth("0", seconds_font));
+  position_x = second.x;
+  screen->setTextPadding(screen->textWidth("0", second.font));
   if (time.second < 10) {
-    position_x += screen->drawChar('0', position_x, seconds_y, seconds_font);
-    position_x += seconds_space;
-    position_x += screen->drawNumber(time.second, position_x, seconds_y, seconds_font);
+    position_x += screen->drawChar('0', position_x, second.y, second.font);
+    position_x += second.space;
+    position_x += screen->drawNumber(time.second, position_x, second.y, second.font);
   } else {
-    position_x += screen->drawNumber(time.second / 10, position_x, seconds_y, seconds_font);
-    position_x += seconds_space;
-    position_x += screen->drawNumber(time.second % 10, position_x, seconds_y, seconds_font);
+    position_x += screen->drawNumber(time.second / 10, position_x, second.y, second.font);
+    position_x += second.space;
+    position_x += screen->drawNumber(time.second % 10, position_x, second.y, second.font);
   }
+
+  redisplay = false;
 }
