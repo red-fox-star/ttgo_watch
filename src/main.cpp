@@ -76,7 +76,7 @@ void setup(void) {
   Actor::setPower((PowerManager *) &power_manager);
   Actor::setDisplayTask(display_task);
 
-  runActor("watchface", &display_clock, 9);
+  runActor("watchface", &display_clock, 20);
   runActor("pong", &display_pong, 10);
   runActor("power", &display_power, 11);
 
